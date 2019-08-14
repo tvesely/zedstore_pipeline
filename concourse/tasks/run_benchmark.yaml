@@ -1,0 +1,28 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+inputs:
+  - name: zedstore_pipeline
+  - name: postgres_src
+  - name: tpch_dbgen_src
+  - name: vops_src
+
+run:
+  path: sh
+  args: 
+  - -exc
+  - |
+    # Set up postgres user
+    getent passwd postgres|| useradd postgres
+
+    zedstore_pipeline/concourse/scripts/install_postgres.sh
+    zedstore_pipeline/concourse/scripts/install_tpch_datagen.sh
+    zedstore_pipeline/concourse/scripts/install_vops.sh
+    su -c "zedstore_pipeline/concourse/scripts/initdb.sh" postgres
+    zedstore_pipeline/concourse/scripts/gen_data.sh
+    su -c "zedstore_pipeline/concourse/scripts/zedstore_perf_test.sh" postgres
+params:
+  EXTRA_CONFIGURE_FLAGS: ""
+  SCALE_FACTOR: 1
+  POSTGRES_INSTALL_DIR: /usr/local/pgsql

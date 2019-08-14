@@ -1,0 +1,15 @@
+---
+platform: linux
+image_resource:
+  type: docker-image
+inputs:
+  - name: zedstore_pipeline
+  - name: postgres_src
+
+run:
+  path: zedstore_pipeline/concourse/scripts/run_icw.sh
+params:
+  EXTRA_CONFIGURE_FLAGS: ""
+  POSTGRES_INSTALL_DIR: /usr/local/pgsql
+  DEFAULT_TABLE_ACCESS_METHOD: "heap"
+  EXTRA_REGRESS_OPTS: ""

@@ -1,0 +1,85 @@
+---
+groups:
+- name: all
+  jobs:
+  - benchmark
+  - icw
+
+
+resources:
+- name: zedstore_pipeline
+  type: git
+  source:
+    uri: https://github.com/tvesely/zedstore_pipeline
+    branch: {{zedstore_pipeline_branch}}
+
+- name: postgres_src
+  type: git
+  source:
+    uri: {{postgres_repo_uri}}
+    branch: {{postgres_repo_branch}}
+
+- name: tpch_dbgen_src
+  type: git
+  source:
+    uri: https://github.com/electrum/tpch-dbgen
+    branch: master
+
+- name: vops_src
+  type: git
+  source:
+    uri: https://github.com/tvesely/vops
+    branch: update_interfaces_to_13_dev
+
+- name: gpdb6_build_image
+  type: docker-image
+  source:
+    repository: pivotaldata/gpdb6-centos7-build
+    tag: 'latest'
+
+jobs:
+- name: benchmark
+  plan:
+  - aggregate:
+    - get: zedstore_pipeline
+    - get: postgres_src
+      trigger: true
+    - get: tpch_dbgen_src
+    - get: vops_src
+    - get: gpdb6_build_image
+  - aggregate:
+    - task: run_benchmark
+      file: zedstore_pipeline/concourse/tasks/run_benchmark.yaml
+      params:
+        EXTRA_CONFIGURE_FLAGS: ""
+        SCALE_FACTOR: {{tpch_scale_factor}}
+      image: gpdb6_build_image
+    - task: run_benchmark_lz4
+      file: zedstore_pipeline/concourse/tasks/run_benchmark.yaml
+      params:
+        EXTRA_CONFIGURE_FLAGS: "--with-lz4"
+        SCALE_FACTOR: {{tpch_scale_factor}}
+      image: gpdb6_build_image
+
+- name: icw
+  plan:
+  - aggregate:
+    - get: zedstore_pipeline
+    - get: postgres_src
+      trigger: true
+    - get: gpdb6_build_image
+  - aggregate:
+    - task: run_icw
+      file: zedstore_pipeline/concourse/tasks/run_icw.yaml
+      params:
+        EXTRA_CONFIGURE_FLAGS: "--enable-tap-tests"
+        DEFAULT_TABLE_ACCESS_METHOD: "zedstore"
+        EXTRA_REGRESS_OPTS: "--ignore-plans-and-tuple-order-diff"
+      image: gpdb6_build_image
+    - task: run_icw_lz4
+      file: zedstore_pipeline/concourse/tasks/run_icw.yaml
+      params:
+        EXTRA_CONFIGURE_FLAGS: "--with-lz4 --enable-tap-tests"
+        DEFAULT_TABLE_ACCESS_METHOD: "zedstore"
+        EXTRA_REGRESS_OPTS: "--ignore-plans-and-tuple-order-diff"
+      image: gpdb6_build_image

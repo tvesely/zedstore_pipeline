@@ -28,8 +28,8 @@ resources:
 - name: vops_src
   type: git
   source:
-    uri: https://github.com/tvesely/vops
-    branch: update_interfaces_to_13_dev
+    uri: https://github.com/postgrespro/vops
+    branch: master
 
 - name: gpdb6_build_image
   type: docker-image

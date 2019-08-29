@@ -16,7 +16,7 @@ else
 fi
 
 pushd ${POSTGRES_SRC_PATH}
-    ./configure ${EXTRA_CONFIGURE_FLAGS} CFLAGS='-O2 -fno-omit-frame-pointer' --enable-cassert --enable-debug --prefix=${POSTGRES_INSTALL_DIR}
+    ./configure ${EXTRA_CONFIGURE_FLAGS} CFLAGS='-O2 -fno-omit-frame-pointer' --enable-debug --prefix=${POSTGRES_INSTALL_DIR}
     make -j32 install-world
 popd
 
